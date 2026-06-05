@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Medical Record — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">D</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Doctor</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/doctor_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_record" class="active"><span class="nav-icon">➕</span> Add Medical Record</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Add Medical Record</h1>
+            <p>Record diagnosis, treatment, and prescription details</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-card">
+                <h2>Patient Visit Record</h2>
+                <p class="form-subtitle">Enter the worker's clinical information for this visit</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <form method="POST">
+
+                    <div class="field-group">
+                        <label>Select Worker / Patient</label>
+                        <select name="worker_id" required>
+                            <option value="">— Select Worker —</option>
+                            {% for w in workers %}
+                            <option value="{{ w[0] }}">{{ w[0] }} — {{ w[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Symptoms</label>
+                        <textarea name="symptoms" placeholder="Describe the patient's symptoms (e.g., fever, cough, fatigue...)" required></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Diagnosis</label>
+                        <textarea name="diagnosis" placeholder="Enter clinical diagnosis (e.g., Dengue Fever, Typhoid, Malaria...)" required></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Prescribed Medicines</label>
+                        <textarea name="medicines" placeholder="List medicines and dosage (e.g., Paracetamol 500mg - 3x daily)" required></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Attending Doctor</label>
+                        <input type="text" name="doctor" placeholder="Doctor's full name" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">💾 Save Medical Record</button>
+                        <a href="/doctor_dashboard" class="btn-secondary">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

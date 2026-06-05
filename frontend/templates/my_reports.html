@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reports — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">W</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Worker</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">My Portal</div>
+            <a href="/worker_dashboard"><span class="nav-icon">🏠</span> My Dashboard</a>
+            <a href="/my_records"><span class="nav-icon">📋</span> My Health Records</a>
+            <a href="/my_reports" class="active"><span class="nav-icon">📁</span> My Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>My Lab Reports</h1>
+            <p>Download your uploaded medical documents and lab reports</p>
+        </div>
+
+        {% if reports %}
+        <div class="table-section">
+            <div class="table-header">
+                <h3>{{ reports|length }} Report(s) Available</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Filename</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reports %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>📄 {{ r[1] }}</td>
+                        <td><a href="/download/{{ r[1] }}" class="btn-download">⬇ Download</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📁</div>
+            <h3>No reports uploaded yet</h3>
+            <p>Your lab reports will appear here once they are uploaded by an administrator.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Workers — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers" class="active"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header" style="display:flex; align-items:center; justify-content:space-between">
+            <div>
+                <h1>All Registered Workers</h1>
+                <p>Complete list of migrant workers in the system</p>
+            </div>
+            <a href="/add_worker" class="btn-primary">➕ Add Worker</a>
+        </div>
+
+        {% if workers %}
+        <div class="table-section">
+            <div class="table-header">
+                <h3>{{ workers|length }} Workers Registered</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Region</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in workers %}
+                    <tr>
+                        <td><span class="tag tag-blue">#{{ w[0] }}</span></td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px">
+                                <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0">{{ w[1][0] }}</div>
+                                <strong>{{ w[1] }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ w[2] }}</td>
+                        <td>{{ w[3] }}</td>
+                        <td>📞 {{ w[4] }}</td>
+                        <td><span class="tag tag-green">{{ w[5] }}</span></td>
+                        <td>
+                            <div style="display:flex; gap:8px">
+                                <a href="/records/{{ w[0] }}" class="btn-view">📋 Records</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h3>No workers registered yet</h3>
+            <p>Start by adding migrant workers to the system.</p>
+            <a href="/add_worker" class="btn-primary" style="display:inline-block; margin-top:16px">➕ Register First Worker</a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

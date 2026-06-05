@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MigraHealth Kerala — Migrant Worker Health Management</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="home-page">
+    <div class="home-grid">
+
+        <div class="home-left">
+            <h1>Digital Health<br>for <span>Migrant Workers</span><br>in Kerala</h1>
+            <p>A unified platform for managing migrant worker health records, aligned with Sustainable Development Goals. Empowering healthcare workers, administrators, and migrants alike.</p>
+            <div class="home-badges">
+                <span class="home-badge">🏥 SDG 3 — Good Health</span>
+                <span class="home-badge">⚖️ SDG 10 — Reduced Inequalities</span>
+                <span class="home-badge">🤝 SDG 17 — Partnerships</span>
+                <span class="home-badge">Govt. of Kerala</span>
+                <span class="home-badge">Health Service Dept.</span>
+            </div>
+        </div>
+
+        <div class="home-card">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Select your role to access the portal</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert {{ category }}" style="margin-bottom:16px; text-align:left">
+                {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+            </div>
+            {% endfor %}
+            {% endwith %}
+
+            <a href="/login?role=admin">
+                <button class="role-btn admin">
+                    <span class="role-icon">🛡️</span>
+                    <span class="role-info">
+                        Admin Login
+                        <small>Manage workers, analytics & system</small>
+                    </span>
+                </button>
+            </a>
+
+            <a href="/login?role=doctor">
+                <button class="role-btn doctor">
+                    <span class="role-icon">🩺</span>
+                    <span class="role-info">
+                        Doctor Login
+                        <small>Add & manage medical records</small>
+                    </span>
+                </button>
+            </a>
+
+            <a href="/login?role=worker">
+                <button class="role-btn worker">
+                    <span class="role-icon">👷</span>
+                    <span class="role-info">
+                        Worker Login
+                        <small>View your health records & reports</small>
+                    </span>
+                </button>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Worker — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker" class="active"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Register New Worker</h1>
+            <p>Add a migrant worker and set their login credentials</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-card">
+                <h2>Worker Details</h2>
+                <p class="form-subtitle">Fill in the worker's personal, regional, and login information</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <form method="POST">
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Full Name</label>
+                            <input type="text" name="name" placeholder="Worker's full name" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Gender</label>
+                            <select name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Age</label>
+                            <input type="number" name="age" placeholder="Age in years" min="1" max="100" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Phone Number <span style="color:var(--text-muted);font-weight:400">(used as login username)</span></label>
+                            <input type="text" name="phone" placeholder="10-digit mobile number" maxlength="10" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Region / District</label>
+                            <select name="region" required>
+                                <option value="">Select Region</option>
+                                <option>North Kerala</option>
+                                <option>South Kerala</option>
+                                <option>East Kerala</option>
+                                <option>West Kerala</option>
+                                <option>Central Kerala</option>
+                                <option>Ernakulam</option>
+                                <option>Thiruvananthapuram</option>
+                                <option>Kozhikode</option>
+                                <option>Thrissur</option>
+                                <option>Kollam</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>State of Origin</label>
+                            <select name="origin_state">
+                                <option value="">Select State</option>
+                                <option>West Bengal</option>
+                                <option>Assam</option>
+                                <option>Bihar</option>
+                                <option>Uttar Pradesh</option>
+                                <option>Odisha</option>
+                                <option>Jharkhand</option>
+                                <option>Tamil Nadu</option>
+                                <option>Karnataka</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ── Login credentials set by admin ── -->
+                    <div style="background:var(--primary-light);border:1px solid rgba(26,86,219,0.15);border-radius:10px;padding:18px 20px;margin-top:8px;margin-bottom:4px">
+                        <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:14px">
+                            🔑 Worker Login Credentials
+                        </p>
+                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+                            The worker will log in using their <strong>phone number</strong> as username
+                            and the password you set below.
+                        </p>
+                        <div class="field-group" style="margin-bottom:0">
+                            <label>Set Login Password for Worker</label>
+                            <input type="text" name="worker_password" placeholder="Set a password (min. 4 characters)" required minlength="4">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">➕ Register Worker</button>
+                        <a href="/admin_dashboard" class="btn-secondary">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

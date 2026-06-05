@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout">
+                <button class="logout-btn"><span>🚪</span> Logout</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Admin Dashboard</h1>
+            <p>Overview of the Migrant Worker Health Management System</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        <!-- STAT CARDS -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">👷</div>
+                <div>
+                    <div class="stat-value">{{ workers }}</div>
+                    <div class="stat-label">Total Workers Registered</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">📋</div>
+                <div>
+                    <div class="stat-value">{{ records }}</div>
+                    <div class="stat-label">Total Medical Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber">📁</div>
+                <div>
+                    <div class="stat-value">{{ reports }}</div>
+                    <div class="stat-label">Reports Uploaded</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">🌍</div>
+                <div>
+                    <div class="stat-value">{{ regions }}</div>
+                    <div class="stat-label">Regions Covered</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="info-grid">
+            <a href="/add_worker" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">➕</div>
+                    <h3>Register Worker</h3>
+                    <p>Add a new migrant worker to the system with personal and regional details.</p>
+                </div>
+            </a>
+            <a href="/all_workers" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">👥</div>
+                    <h3>View All Workers</h3>
+                    <p>Browse and manage all registered migrant workers in the database.</p>
+                </div>
+            </a>
+            <a href="/analytics" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">📈</div>
+                    <h3>Analytics & Reports</h3>
+                    <p>View disease trends, region-wise health data, and infection monitoring.</p>
+                </div>
+            </a>
+            <a href="/upload" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">📁</div>
+                    <h3>Upload Lab Reports</h3>
+                    <p>Upload medical documents and lab reports for specific workers.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- RECENT WORKERS TABLE -->
+        {% if recent_workers %}
+        <div class="table-section" style="margin-top:32px">
+            <div class="table-header">
+                <h3>Recently Added Workers</h3>
+                <a href="/all_workers" class="btn-secondary" style="font-size:13px;padding:8px 16px">View All →</a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Region</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in recent_workers %}
+                    <tr>
+                        <td><span class="tag tag-blue">#{{ w[0] }}</span></td>
+                        <td><strong>{{ w[1] }}</strong></td>
+                        <td>{{ w[2] }}</td>
+                        <td>{{ w[3] }}</td>
+                        <td>{{ w[4] }}</td>
+                        <td><span class="tag tag-green">{{ w[5] }}</span></td>
+                        <td><a href="/records/{{ w[0] }}" class="btn-view">View Records</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

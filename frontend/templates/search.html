@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Worker — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">{{ session.user[0].upper() }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">{{ session.role }}</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Navigation</div>
+            {% if session.role == 'admin' %}
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search" class="active"><span class="nav-icon">🔍</span> Search Worker</a>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            {% elif session.role == 'doctor' %}
+            <a href="/doctor_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_record"><span class="nav-icon">➕</span> Add Record</a>
+            <a href="/search" class="active"><span class="nav-icon">🔍</span> Search Worker</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Search Workers</h1>
+            <p>Find workers by ID, name, or phone number</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-card">
+                <form method="POST">
+                    <div class="search-bar">
+                        <input
+                            type="text"
+                            name="keyword"
+                            placeholder="🔍  Search by Worker ID, Name, or Phone Number..."
+                            value="{{ keyword if keyword else '' }}"
+                            required
+                        >
+                        <button type="submit" class="btn-primary" style="white-space:nowrap">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if data %}
+        <div style="margin-top:24px">
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:14px">Found <strong>{{ data|length }}</strong> result(s)</p>
+
+            {% for i in data %}
+            <div class="worker-card">
+                <div class="worker-avatar">{{ i[1][0] }}</div>
+                <div class="worker-info">
+                    <h3>{{ i[1] }}</h3>
+                    <div class="worker-meta">
+                        <span>🪪 ID: {{ i[0] }}</span>
+                        <span>⚧ {{ i[2] }}, Age {{ i[3] }}</span>
+                        <span>📞 {{ i[4] }}</span>
+                        <span>📍 {{ i[5] }}</span>
+                    </div>
+                </div>
+                <div class="worker-actions">
+                    <a href="/records/{{ i[0] }}" class="btn-view">📋 Records</a>
+                    {% if session.role == 'doctor' %}
+                    <a href="/add_record" class="btn-primary" style="font-size:13px; padding:8px 14px">+ Add Record</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif keyword is defined and keyword %}
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>No workers found</h3>
+            <p>No results matched "{{ keyword }}". Try searching by ID, name, or phone.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

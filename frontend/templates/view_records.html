@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical History — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">{{ session.user[0].upper() }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">{{ session.role }}</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Navigation</div>
+            {% if session.role == 'admin' %}
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            {% elif session.role == 'doctor' %}
+            <a href="/doctor_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_record"><span class="nav-icon">➕</span> Add Record</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            {% else %}
+            <a href="/worker_dashboard"><span class="nav-icon">🏠</span> Dashboard</a>
+            <a href="/my_records"><span class="nav-icon">📋</span> My Records</a>
+            <a href="/my_reports"><span class="nav-icon">📁</span> My Reports</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Medical History</h1>
+            {% if worker %}
+            <p>Health records for <strong>{{ worker[1] }}</strong> — ID #{{ worker[0] }}</p>
+            {% else %}
+            <p>Complete medical history and visit records</p>
+            {% endif %}
+        </div>
+
+        <!-- Worker Info Summary -->
+        {% if worker %}
+        <div class="form-card" style="margin-bottom:28px; padding:20px 28px">
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap">
+                <div class="worker-avatar" style="width:52px;height:52px;font-size:20px;border-radius:12px">{{ worker[1][0] }}</div>
+                <div>
+                    <h3 style="font-size:18px; margin-bottom:4px">{{ worker[1] }}</h3>
+                    <div style="display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-muted)">
+                        <span>⚧ {{ worker[2] }}</span>
+                        <span>🎂 Age {{ worker[3] }}</span>
+                        <span>📞 {{ worker[4] }}</span>
+                        <span>📍 {{ worker[5] }}</span>
+                    </div>
+                </div>
+                {% if session.role == 'doctor' %}
+                <div style="margin-left:auto">
+                    <a href="/add_record" class="btn-primary" style="font-size:14px">+ Add Record</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if records %}
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px">
+            {{ records|length }} visit record(s) found — sorted by most recent
+        </p>
+
+        {% for r in records %}
+        <div class="record-card">
+            <div class="record-date">📅 Visit Date: {{ r[6] }}</div>
+            <div class="record-grid">
+                <div class="record-field">
+                    <label>Symptoms</label>
+                    <p>{{ r[2] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Diagnosis</label>
+                    <p>{{ r[3] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Prescribed Medicines</label>
+                    <p>{{ r[4] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Attending Doctor</label>
+                    <p>Dr. {{ r[5] }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No medical records found</h3>
+            <p>This worker has no health records yet.</p>
+            {% if session.role == 'doctor' %}
+            <a href="/add_record" class="btn-primary" style="display:inline-block; margin-top:16px">+ Add First Record</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

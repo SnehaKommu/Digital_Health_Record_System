@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics" class="active"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Analytics & Reports</h1>
+            <p>Disease surveillance, region-wise health data, and infection trend monitoring</p>
+        </div>
+
+        <!-- SUMMARY STATS -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">👷</div>
+                <div>
+                    <div class="stat-value">{{ total_workers }}</div>
+                    <div class="stat-label">Total Workers</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">📋</div>
+                <div>
+                    <div class="stat-value">{{ total_records }}</div>
+                    <div class="stat-label">Medical Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber">🦠</div>
+                <div>
+                    <div class="stat-value">{{ unique_diagnoses }}</div>
+                    <div class="stat-label">Unique Diagnoses</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">⚠️</div>
+                <div>
+                    <div class="stat-value">{{ infectious_cases }}</div>
+                    <div class="stat-label">Infectious Disease Cases</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+
+            <!-- REGION-WISE WORKERS -->
+            <div class="chart-card">
+                <h3>📍 Workers by Region</h3>
+                <div class="bar-chart">
+                    {% for row in region_data %}
+                    <div class="bar-row">
+                        <div class="bar-label">{{ row[0][:8] }}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:{{ (row[1] / max_region * 100)|int }}%; background: linear-gradient(90deg, #1a56db, #0ea5e9)">
+                                {{ row[1] }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-muted); font-size:14px">No data available yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- TOP DIAGNOSES -->
+            <div class="chart-card">
+                <h3>🦠 Most Common Diagnoses</h3>
+                <div class="bar-chart">
+                    {% for row in diagnosis_data %}
+                    <div class="bar-row">
+                        <div class="bar-label" style="width:90px; font-size:11px">{{ row[0][:10] }}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:{{ (row[1] / max_diagnosis * 100)|int }}%; background: linear-gradient(90deg, #059669, #34d399)">
+                                {{ row[1] }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-muted); font-size:14px">No records added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- GENDER DISTRIBUTION -->
+            <div class="chart-card">
+                <h3>⚧ Gender Distribution</h3>
+                <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap">
+                    {% for row in gender_data %}
+                    <div style="text-align:center; flex:1; min-width:100px; padding:20px; background:var(--bg); border-radius:12px">
+                        <div style="font-size:32px; margin-bottom:6px">{{ '👨' if row[0]=='Male' else '👩' if row[0]=='Female' else '🧑' }}</div>
+                        <div style="font-size:26px; font-weight:700; color:var(--text)">{{ row[1] }}</div>
+                        <div style="font-size:12px; color:var(--text-muted)">{{ row[0] }}</div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-muted); font-size:14px">No data available yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- AGE GROUP ANALYSIS -->
+            <div class="chart-card">
+                <h3>🎂 Age Group Analysis</h3>
+                <div class="bar-chart">
+                    {% for row in age_data %}
+                    <div class="bar-row">
+                        <div class="bar-label" style="width:70px; font-size:11px">{{ row[0] }}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:{{ (row[1] / (max_age if max_age > 0 else 1) * 100)|int }}%; background: linear-gradient(90deg, #7c3aed, #a78bfa)">
+                                {{ row[1] }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-muted); font-size:14px">No data available yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RECENT MEDICAL RECORDS TABLE -->
+        {% if recent_records %}
+        <div class="table-section" style="margin-top:32px">
+            <div class="table-header">
+                <h3>Recent Visits & Disease Surveillance</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Region</th>
+                        <th>Diagnosis</th>
+                        <th>Doctor</th>
+                        <th>Visit Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recent_records %}
+                    <tr>
+                        <td><strong>{{ r[0] }}</strong></td>
+                        <td><span class="tag tag-blue">{{ r[1] }}</span></td>
+                        <td>{{ r[2][:50] }}{% if r[2]|length > 50 %}...{% endif %}</td>
+                        <td>Dr. {{ r[3] }}</td>
+                        <td>{{ r[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

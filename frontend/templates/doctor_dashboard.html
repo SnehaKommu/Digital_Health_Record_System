@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">D</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Doctor</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/doctor_dashboard" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_record"><span class="nav-icon">➕</span> Add Medical Record</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout">
+                <button class="logout-btn"><span>🚪</span> Logout</button>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Doctor Dashboard</h1>
+            <p>Manage patient records and medical history</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon green">📋</div>
+                <div>
+                    <div class="stat-value">{{ total_records }}</div>
+                    <div class="stat-label">Total Records Added</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">👥</div>
+                <div>
+                    <div class="stat-value">{{ total_workers }}</div>
+                    <div class="stat-label">Total Workers</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <a href="/add_record" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">➕</div>
+                    <h3>Add Medical Record</h3>
+                    <p>Record new symptoms, diagnosis, medicines, and treatment details for a worker.</p>
+                </div>
+            </a>
+            <a href="/search" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">🔍</div>
+                    <h3>Search & View History</h3>
+                    <p>Search a worker and view complete medical history and past visits.</p>
+                </div>
+            </a>
+        </div>
+
+        {% if recent_records %}
+        <div class="table-section" style="margin-top:32px">
+            <div class="table-header">
+                <h3>Recent Medical Records</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker ID</th>
+                        <th>Worker Name</th>
+                        <th>Diagnosis</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recent_records %}
+                    <tr>
+                        <td><span class="tag tag-blue">#{{ r[1] }}</span></td>
+                        <td><strong>{{ r[7] if r[7] else 'N/A' }}</strong></td>
+                        <td>{{ r[3][:40] }}{% if r[3]|length > 40 %}...{% endif %}</td>
+                        <td>{{ r[5] }}</td>
+                        <td>{{ r[6] }}</td>
+                        <td><a href="/records/{{ r[1] }}" class="btn-view">View All</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

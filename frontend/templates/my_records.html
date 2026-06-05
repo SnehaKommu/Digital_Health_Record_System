@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Health Records — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">W</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Worker</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">My Portal</div>
+            <a href="/worker_dashboard"><span class="nav-icon">🏠</span> My Dashboard</a>
+            <a href="/my_records" class="active"><span class="nav-icon">📋</span> My Health Records</a>
+            <a href="/my_reports"><span class="nav-icon">📁</span> My Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>My Health Records</h1>
+            <p>All your medical visits and treatment history</p>
+        </div>
+
+        {% if records %}
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px">
+            {{ records|length }} visit(s) on record — sorted by most recent
+        </p>
+        {% for r in records %}
+        <div class="record-card">
+            <div class="record-date">📅 Visit Date: {{ r[6] }}</div>
+            <div class="record-grid">
+                <div class="record-field">
+                    <label>Symptoms</label>
+                    <p>{{ r[2] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Diagnosis</label>
+                    <p>{{ r[3] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Prescribed Medicines</label>
+                    <p>{{ r[4] }}</p>
+                </div>
+                <div class="record-field">
+                    <label>Attending Doctor</label>
+                    <p>Dr. {{ r[5] }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No health records found</h3>
+            <p>Your medical records will appear here after a doctor's visit.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

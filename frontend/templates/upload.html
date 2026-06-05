@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Reports — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload" class="active"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Upload Medical Report</h1>
+            <p>Upload lab reports and medical documents for workers</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-card">
+                <h2>Upload Document</h2>
+                <p class="form-subtitle">Supported formats: PDF, JPG, PNG, DOCX (Max 10MB)</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data">
+
+                    <div class="field-group">
+                        <label>Select Worker</label>
+                        <select name="worker_id" required>
+                            <option value="">— Select Worker —</option>
+                            {% for w in workers %}
+                            <option value="{{ w[0] }}">{{ w[0] }} — {{ w[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Report File</label>
+                        <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">📤 Upload Report</button>
+                        <a href="/admin_dashboard" class="btn-secondary">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Recently Uploaded -->
+        {% if recent_uploads %}
+        <div class="table-section" style="margin-top:32px">
+            <div class="table-header">
+                <h3>Recently Uploaded Reports</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Worker</th>
+                        <th>Filename</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recent_uploads %}
+                    <tr>
+                        <td><span class="tag tag-blue">#{{ r[0] }}</span></td>
+                        <td>{{ r[2] }}</td>
+                        <td>📄 {{ r[3] }}</td>
+                        <td><a href="/download/{{ r[3] }}" class="btn-download">⬇ Download</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

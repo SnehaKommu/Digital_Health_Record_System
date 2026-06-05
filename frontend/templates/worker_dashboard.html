@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Health Portal — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">W</div>
+                <div class="user-info">
+                    <div class="user-name">{{ worker_info[1] if worker_info else session.user }}</div>
+                    <div class="user-role">Worker</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">My Portal</div>
+            <a href="/worker_dashboard" class="active"><span class="nav-icon">🏠</span> My Dashboard</a>
+            <a href="/my_records"><span class="nav-icon">📋</span> My Health Records</a>
+            <a href="/my_reports"><span class="nav-icon">📁</span> My Reports</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout">
+                <button class="logout-btn"><span>🚪</span> Logout</button>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>My Health Portal</h1>
+            <p>View your personal health records and medical reports</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        <!-- WORKER PROFILE CARD -->
+        {% if worker_info %}
+        <div class="form-card" style="margin-bottom:28px">
+            <div style="display:flex; align-items:center; gap:20px">
+                <div class="worker-avatar" style="width:64px;height:64px;font-size:26px">{{ worker_info[1][0] }}</div>
+                <div>
+                    <h2 style="font-size:22px; margin-bottom:6px">{{ worker_info[1] }}</h2>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:14px; color:var(--text-muted)">
+                        <span>⚧ {{ worker_info[2] }}</span>
+                        <span>🎂 Age {{ worker_info[3] }}</span>
+                        <span>📞 {{ worker_info[4] }}</span>
+                        <span>📍 {{ worker_info[5] }} Region</span>
+                    </div>
+                </div>
+                <div style="margin-left:auto">
+                    <span class="tag tag-blue">Worker ID: #{{ worker_info[0] }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- STAT CARDS -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon green">📋</div>
+                <div>
+                    <div class="stat-value">{{ total_records }}</div>
+                    <div class="stat-label">Health Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">📁</div>
+                <div>
+                    <div class="stat-value">{{ total_reports }}</div>
+                    <div class="stat-label">Lab Reports Uploaded</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACCESS -->
+        <div class="info-grid">
+            <a href="/my_records" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">📋</div>
+                    <h3>My Health Records</h3>
+                    <p>View all your medical visits, diagnoses, and prescribed medicines in chronological order.</p>
+                </div>
+            </a>
+            <a href="/my_reports" style="text-decoration:none">
+                <div class="info-card">
+                    <div class="card-icon">📁</div>
+                    <h3>Lab Reports</h3>
+                    <p>Download your uploaded lab reports and medical documents.</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
