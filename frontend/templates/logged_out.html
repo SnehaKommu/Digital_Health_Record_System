@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged Out — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Auto-redirect to home after 3 seconds -->
+    <meta http-equiv="refresh" content="3;url=/">
+    <style>
+        .logout-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0369a1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logout-card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 56px 52px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+        }
+        .logout-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: block;
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop {
+            0%   { transform: scale(0.6); opacity: 0; }
+            70%  { transform: scale(1.1); }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+        .logout-card h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .logout-card p {
+            color: rgba(255,255,255,0.65);
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+        .redirect-note {
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            margin-top: 28px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #1a56db);
+            border-radius: 4px;
+            animation: shrink 3s linear forwards;
+            width: 100%;
+        }
+        @keyframes shrink {
+            from { width: 100%; }
+            to   { width: 0%; }
+        }
+        .home-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 12px 28px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .home-link:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+<div class="logout-page">
+    <div class="logout-card">
+
+        <span class="logout-icon">✅</span>
+
+        <h2>Logged Out Successfully</h2>
+
+        <p>
+            Goodbye, <strong style="color:white">
+            {% if username %}{{ username }}{% else %}User{% endif %}
+            </strong>!
+        </p>
+        <p>You have been safely signed out
+            {% if role %}as <strong style="color:#38bdf8">{{ role | capitalize }}</strong>{% endif %}.
+        </p>
+
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <p class="redirect-note">Redirecting to home page in 3 seconds…</p>
+
+        <a href="/" class="home-link">← Go to Home Now</a>
+
+    </div>
+</div>
+
+</body>
+</html>

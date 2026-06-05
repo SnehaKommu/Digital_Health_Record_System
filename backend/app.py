@@ -94,12 +94,15 @@ def login():
 
 # ══════════════════════════════════════════════════════════════════════════════
 # LOGOUT
+# We render a dedicated page BEFORE clearing the session so the message
+# is visible immediately.  The page auto-redirects to home after 3 seconds.
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/logout")
 def logout():
+    username = session.get("user", "")
+    role     = session.get("role", "")
     session.clear()
-    flash("Logged out successfully.", "success")
-    return redirect("/")
+    return render_template("logged_out.html", username=username, role=role)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ADMIN DASHBOARD
