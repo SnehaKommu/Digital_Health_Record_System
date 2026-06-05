@@ -52,7 +52,7 @@
         <div class="form-section">
             <div class="form-card">
                 <h2>Worker Details</h2>
-                <p class="form-subtitle">Fill in the worker's personal, regional, and login information</p>
+                <p class="form-subtitle">Fill in all details carefully — the worker will use their phone number to log in</p>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% for category, message in messages %}
@@ -63,6 +63,11 @@
                 {% endwith %}
 
                 <form method="POST">
+
+                    <!-- Personal Details -->
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:14px;margin-top:4px">
+                        👤 Personal Information
+                    </div>
 
                     <div class="form-row">
                         <div class="field-group">
@@ -86,57 +91,83 @@
                             <input type="number" name="age" placeholder="Age in years" min="1" max="100" required>
                         </div>
                         <div class="field-group">
-                            <label>Phone Number <span style="color:var(--text-muted);font-weight:400">(used as login username)</span></label>
+                            <label>Phone Number</label>
                             <input type="text" name="phone" placeholder="10-digit mobile number" maxlength="10" required>
                         </div>
                     </div>
 
+                    <!-- Location Details -->
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:14px;margin-top:20px">
+                        📍 Location Information
+                    </div>
+
                     <div class="form-row">
                         <div class="field-group">
-                            <label>Region / District</label>
+                            <label>
+                                District in Kerala
+                                <span style="font-size:11px;color:var(--text-muted);font-weight:400;display:block;margin-top:2px">
+                                    The Kerala district where this worker is currently working / living
+                                </span>
+                            </label>
                             <select name="region" required>
-                                <option value="">Select Region</option>
-                                <option>North Kerala</option>
-                                <option>South Kerala</option>
-                                <option>East Kerala</option>
-                                <option>West Kerala</option>
-                                <option>Central Kerala</option>
-                                <option>Ernakulam</option>
+                                <option value="">Select District</option>
                                 <option>Thiruvananthapuram</option>
-                                <option>Kozhikode</option>
-                                <option>Thrissur</option>
                                 <option>Kollam</option>
+                                <option>Pathanamthitta</option>
+                                <option>Alappuzha</option>
+                                <option>Kottayam</option>
+                                <option>Idukki</option>
+                                <option>Ernakulam</option>
+                                <option>Thrissur</option>
+                                <option>Palakkad</option>
+                                <option>Malappuram</option>
+                                <option>Kozhikode</option>
+                                <option>Wayanad</option>
+                                <option>Kannur</option>
+                                <option>Kasaragod</option>
                             </select>
                         </div>
                         <div class="field-group">
-                            <label>State of Origin</label>
+                            <label>
+                                Home State (Origin)
+                                <span style="font-size:11px;color:var(--text-muted);font-weight:400;display:block;margin-top:2px">
+                                    The Indian state this worker originally came from
+                                </span>
+                            </label>
                             <select name="origin_state">
-                                <option value="">Select State</option>
+                                <option value="">Select Home State</option>
                                 <option>West Bengal</option>
                                 <option>Assam</option>
                                 <option>Bihar</option>
                                 <option>Uttar Pradesh</option>
                                 <option>Odisha</option>
                                 <option>Jharkhand</option>
+                                <option>Chhattisgarh</option>
+                                <option>Madhya Pradesh</option>
+                                <option>Rajasthan</option>
                                 <option>Tamil Nadu</option>
                                 <option>Karnataka</option>
+                                <option>Andhra Pradesh</option>
+                                <option>Telangana</option>
                                 <option>Other</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- ── Login credentials set by admin ── -->
-                    <div style="background:var(--primary-light);border:1px solid rgba(26,86,219,0.15);border-radius:10px;padding:18px 20px;margin-top:8px;margin-bottom:4px">
-                        <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:14px">
+                    <!-- Login Credentials -->
+                    <div style="background:var(--primary-light);border:1px solid rgba(26,86,219,0.18);border-radius:12px;padding:20px 22px;margin-top:10px">
+                        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:6px">
                             🔑 Worker Login Credentials
-                        </p>
-                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-                            The worker will log in using their <strong>phone number</strong> as username
-                            and the password you set below.
+                        </div>
+                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+                            The worker will log in using their <strong style="color:var(--text)">phone number as their username</strong>
+                            and the password you set below. Please share these credentials with the worker after registration.
                         </p>
                         <div class="field-group" style="margin-bottom:0">
                             <label>Set Login Password for Worker</label>
-                            <input type="text" name="worker_password" placeholder="Set a password (min. 4 characters)" required minlength="4">
+                            <input type="text" name="worker_password"
+                                placeholder="Set a password (min. 4 characters)"
+                                required minlength="4">
                         </div>
                     </div>
 
