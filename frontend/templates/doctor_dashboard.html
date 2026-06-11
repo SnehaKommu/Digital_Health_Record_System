@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
 <div class="dashboard-container">
 
     <div class="sidebar">
@@ -27,18 +26,14 @@
                 </div>
             </div>
         </div>
-
         <nav class="sidebar-nav">
             <div class="nav-section-label">Main</div>
             <a href="/doctor_dashboard" class="active"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="/add_record"><span class="nav-icon">➕</span> Add Medical Record</a>
             <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
         </nav>
-
         <div class="sidebar-footer">
-            <a href="/logout">
-                <button class="logout-btn"><span>🚪</span> Logout</button>
-            </a>
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
         </div>
     </div>
 
@@ -55,63 +50,90 @@
         {% endfor %}
         {% endwith %}
 
+        <!-- DOCTOR PROFILE CARD -->
+        {% if doctor_info %}
+        <div class="form-card" style="margin-bottom:28px; padding:22px 28px">
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap">
+                <div style="width:60px;height:60px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">🩺</div>
+                <div style="flex:1">
+                    <h2 style="font-size:20px; margin-bottom:5px">{{ doctor_info[1] }}</h2>
+                    <div style="display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-muted)">
+                        <span>🏥 {{ doctor_info[2] }}</span>
+                        <span>🎓 {{ doctor_info[3] }}</span>
+                        <span>🏨 {{ doctor_info[4] }}</span>
+                        <span>📍 {{ doctor_info[5] }}</span>
+                        <span>⏱️ {{ doctor_info[8] }} yrs experience</span>
+                    </div>
+                </div>
+                <div>
+                    {% if doctor_info[12] == 'dataset' %}
+                    <span class="tag tag-blue">Pre-loaded Doctor</span>
+                    {% else %}
+                    <span class="tag tag-green">Registered Doctor</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- STATS -->
         <div class="stat-grid">
             <div class="stat-card">
                 <div class="stat-icon green">📋</div>
                 <div>
-                    <div class="stat-value">{{ total_records }}</div>
-                    <div class="stat-label">Total Records Added</div>
+                    <div class="stat-value">{{ my_records_count }}</div>
+                    <div class="stat-label">Records Added by You</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon blue">👥</div>
                 <div>
                     <div class="stat-value">{{ total_workers }}</div>
-                    <div class="stat-label">Total Workers</div>
+                    <div class="stat-label">Total Workers in System</div>
                 </div>
             </div>
         </div>
 
+        <!-- QUICK ACTIONS -->
         <div class="info-grid">
             <a href="/add_record" style="text-decoration:none">
                 <div class="info-card">
                     <div class="card-icon">➕</div>
                     <h3>Add Medical Record</h3>
-                    <p>Record new symptoms, diagnosis, medicines, and treatment details for a worker.</p>
+                    <p>Record symptoms, diagnosis, and medicines. Your name is auto-filled.</p>
                 </div>
             </a>
             <a href="/search" style="text-decoration:none">
                 <div class="info-card">
                     <div class="card-icon">🔍</div>
-                    <h3>Search & View History</h3>
-                    <p>Search a worker and view complete medical history and past visits.</p>
+                    <h3>Search Worker</h3>
+                    <p>Find a worker by ID, name, or phone and view their complete medical history.</p>
                 </div>
             </a>
         </div>
 
+        <!-- RECENT RECORDS BY THIS DOCTOR -->
         {% if recent_records %}
         <div class="table-section" style="margin-top:32px">
             <div class="table-header">
-                <h3>Recent Medical Records</h3>
+                <h3>Your Recent Medical Records</h3>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Worker ID</th>
-                        <th>Worker Name</th>
+                        <th>Worker</th>
                         <th>Diagnosis</th>
-                        <th>Doctor</th>
-                        <th>Date</th>
+                        <th>Medicines</th>
+                        <th>Visit Date</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for r in recent_records %}
                     <tr>
-                        <td><span class="tag tag-blue">#{{ r[1] }}</span></td>
                         <td><strong>{{ r[7] if r[7] else 'N/A' }}</strong></td>
-                        <td>{{ r[3][:40] }}{% if r[3]|length > 40 %}...{% endif %}</td>
-                        <td>{{ r[5] }}</td>
+                        <td>{{ r[3][:45] }}{% if r[3]|length > 45 %}...{% endif %}</td>
+                        <td style="font-size:13px; color:var(--text-muted)">{{ r[4][:40] }}{% if r[4]|length > 40 %}...{% endif %}</td>
                         <td>{{ r[6] }}</td>
                         <td><a href="/records/{{ r[1] }}" class="btn-view">View All</a></td>
                     </tr>
@@ -123,6 +145,5 @@
 
     </div>
 </div>
-
 </body>
 </html>

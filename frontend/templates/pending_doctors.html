@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Doctor Approvals — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="dashboard-container">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="s-icon">🏥</div>
+                <div>
+                    <div class="s-brand">MigraHealth</div>
+                    <div class="s-sub">Kerala Health Dept.</div>
+                </div>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.user }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="/admin_dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
+            <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
+            <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Doctors</div>
+            <a href="/all_doctors"><span class="nav-icon">🩺</span> All Doctors</a>
+            <a href="/pending_doctors" class="active"><span class="nav-icon">⏳</span> Pending Approvals</a>
+            <div class="nav-section-label">Reports</div>
+            <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
+            <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h1>Pending Doctor Approvals</h1>
+            <p>Review and approve or reject new doctor self-registrations</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">
+            {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+
+        {% if doctors %}
+
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 18px; margin-bottom:24px; font-size:14px; color:#92400e">
+            ⚠️ <strong>{{ doctors|length }} pending registration(s)</strong> are waiting for your review. Approved doctors can immediately log in.
+        </div>
+
+        {% for d in doctors %}
+        <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px; box-shadow:var(--shadow-sm)">
+            <div style="display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap">
+
+                <div style="width:52px; height:52px; background:linear-gradient(135deg,#7c3aed,#a78bfa); border-radius:14px; display:flex; align-items:center; justify-content:center; color:white; font-size:22px; flex-shrink:0">
+                    🩺
+                </div>
+
+                <div style="flex:1; min-width:220px">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px">
+                        <h3 style="font-size:17px; font-weight:600">{{ d[1] }}</h3>
+                        <span class="tag tag-amber">Pending Approval</span>
+                        <span style="font-size:12px; color:var(--text-muted)">Self-Registered</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; font-size:13px; color:var(--text-muted)">
+                        <span>🏥 {{ d[2] }} — {{ d[3] }}</span>
+                        <span>🏨 {{ d[4] }}</span>
+                        <span>📍 {{ d[5] }}</span>
+                        <span>📞 {{ d[6] }}</span>
+                        <span>📧 {{ d[7] if d[7] else '—' }}</span>
+                        <span>⏱️ {{ d[8] }} yrs experience</span>
+                        <span>🪪 Username: <strong style="color:var(--text)">{{ d[9] }}</strong></span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-shrink:0; align-items:center; margin-top:4px">
+                    <a href="/approve_doctor/{{ d[0] }}" class="btn-primary" style="font-size:14px; padding:10px 20px">
+                        ✅ Approve
+                    </a>
+                    <a href="/reject_doctor/{{ d[0] }}" class="btn-secondary" style="font-size:14px; padding:10px 20px; color:var(--danger); border-color:var(--danger)"
+                       onclick="return confirm('Reject and delete this registration?')">
+                        ❌ Reject
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <h3>No pending approvals</h3>
+            <p>All doctor registrations have been reviewed. New self-registrations will appear here.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+</body>
+</html>

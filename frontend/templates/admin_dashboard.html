@@ -7,10 +7,8 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
@@ -28,26 +26,28 @@
                 </div>
             </div>
         </div>
-
         <nav class="sidebar-nav">
             <div class="nav-section-label">Main</div>
             <a href="/admin_dashboard" class="active"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="/add_worker"><span class="nav-icon">➕</span> Add Worker</a>
             <a href="/all_workers"><span class="nav-icon">👥</span> All Workers</a>
             <a href="/search"><span class="nav-icon">🔍</span> Search Worker</a>
+            <div class="nav-section-label">Doctors</div>
+            <a href="/all_doctors"><span class="nav-icon">🩺</span> All Doctors</a>
+            <a href="/pending_doctors"><span class="nav-icon">⏳</span> Pending Approvals
+                {% if pending_doctors > 0 %}
+                <span style="background:#dc2626;color:white;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">{{ pending_doctors }}</span>
+                {% endif %}
+            </a>
             <div class="nav-section-label">Reports</div>
             <a href="/analytics"><span class="nav-icon">📈</span> Analytics</a>
             <a href="/upload"><span class="nav-icon">📁</span> Upload Reports</a>
         </nav>
-
         <div class="sidebar-footer">
-            <a href="/logout">
-                <button class="logout-btn"><span>🚪</span> Logout</button>
-            </a>
+            <a href="/logout"><button class="logout-btn"><span>🚪</span> Logout</button></a>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
 
         <div class="page-header">
@@ -61,20 +61,35 @@
         {% endfor %}
         {% endwith %}
 
+        <!-- Pending approval alert -->
+        {% if pending_doctors > 0 %}
+        <div class="alert warning" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+            <span>⚠️ <strong>{{ pending_doctors }} new doctor registration(s)</strong> are waiting for your approval.</span>
+            <a href="/pending_doctors" style="background:#d97706;color:white;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600">Review Now →</a>
+        </div>
+        {% endif %}
+
         <!-- STAT CARDS -->
         <div class="stat-grid">
             <div class="stat-card">
                 <div class="stat-icon blue">👷</div>
                 <div>
                     <div class="stat-value">{{ workers }}</div>
-                    <div class="stat-label">Total Workers Registered</div>
+                    <div class="stat-label">Total Workers</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">🩺</div>
+                <div>
+                    <div class="stat-value">{{ total_doctors }}</div>
+                    <div class="stat-label">Approved Doctors</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon green">📋</div>
                 <div>
                     <div class="stat-value">{{ records }}</div>
-                    <div class="stat-label">Total Medical Records</div>
+                    <div class="stat-label">Medical Records</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -85,10 +100,10 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon purple">🌍</div>
+                <div class="stat-icon cyan">🌍</div>
                 <div>
                     <div class="stat-value">{{ regions }}</div>
-                    <div class="stat-label">Regions Covered</div>
+                    <div class="stat-label">Districts Covered</div>
                 </div>
             </div>
         </div>
@@ -99,21 +114,21 @@
                 <div class="info-card">
                     <div class="card-icon">➕</div>
                     <h3>Register Worker</h3>
-                    <p>Add a new migrant worker to the system with personal and regional details.</p>
+                    <p>Add a new migrant worker with their details and set their login credentials.</p>
                 </div>
             </a>
-            <a href="/all_workers" style="text-decoration:none">
+            <a href="/all_doctors" style="text-decoration:none">
                 <div class="info-card">
-                    <div class="card-icon">👥</div>
-                    <h3>View All Workers</h3>
-                    <p>Browse and manage all registered migrant workers in the database.</p>
+                    <div class="card-icon">🩺</div>
+                    <h3>View All Doctors</h3>
+                    <p>Browse all approved doctors including pre-loaded dataset and self-registered doctors.</p>
                 </div>
             </a>
             <a href="/analytics" style="text-decoration:none">
                 <div class="info-card">
                     <div class="card-icon">📈</div>
                     <h3>Analytics & Reports</h3>
-                    <p>View disease trends, region-wise health data, and infection monitoring.</p>
+                    <p>Disease trends, region-wise health data, and infection monitoring.</p>
                 </div>
             </a>
             <a href="/upload" style="text-decoration:none">
@@ -125,7 +140,7 @@
             </a>
         </div>
 
-        <!-- RECENT WORKERS TABLE -->
+        <!-- RECENT WORKERS -->
         {% if recent_workers %}
         <div class="table-section" style="margin-top:32px">
             <div class="table-header">
@@ -135,13 +150,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Gender</th>
-                        <th>Age</th>
-                        <th>Phone</th>
-                        <th>Region</th>
-                        <th>Action</th>
+                        <th>ID</th><th>Name</th><th>Gender</th><th>Age</th><th>Phone</th><th>District</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,6 +172,5 @@
 
     </div>
 </div>
-
 </body>
 </html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Registration — MigraHealth Kerala</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="login-page" style="align-items:flex-start; padding:40px 20px">
+    <div style="width:100%; max-width:620px; margin:0 auto">
+
+        <div style="text-align:center; margin-bottom:28px">
+            <div style="font-size:40px; margin-bottom:10px">🩺</div>
+            <h1 style="font-family:'DM Serif Display',serif; color:white; font-size:28px; margin-bottom:6px">Doctor Registration</h1>
+            <p style="color:rgba(255,255,255,0.6); font-size:14px">
+                Register yourself as a new doctor. Your account will be reviewed and approved by the admin before you can log in.
+            </p>
+        </div>
+
+        <div style="background:white; border-radius:20px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.3)">
+
+            <div style="background:linear-gradient(135deg,var(--primary),var(--accent)); padding:20px 32px">
+                <div style="display:flex; align-items:center; gap:10px; color:rgba(255,255,255,0.8); font-size:13px">
+                    <span>⚠️</span>
+                    <span>Your registration will be <strong style="color:white">pending admin approval</strong>. You will not be able to log in until approved.</span>
+                </div>
+            </div>
+
+            <div style="padding:32px">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <form method="POST">
+
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:14px">
+                        👤 Personal & Professional Details
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Full Name (with title)</label>
+                            <input type="text" name="name" placeholder="e.g. Dr. Arjun Pillai" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Specialization</label>
+                            <select name="specialization" required>
+                                <option value="">Select Specialization</option>
+                                <option>General Physician</option>
+                                <option>General Surgeon</option>
+                                <option>Cardiologist</option>
+                                <option>Dermatologist</option>
+                                <option>Gynecologist</option>
+                                <option>Orthopedic Surgeon</option>
+                                <option>Pediatrician</option>
+                                <option>Psychiatrist</option>
+                                <option>Pulmonologist</option>
+                                <option>Neurologist</option>
+                                <option>Ophthalmologist</option>
+                                <option>ENT Specialist</option>
+                                <option>Dentist</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Qualification</label>
+                            <input type="text" name="qualification" placeholder="e.g. MBBS, MD" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Years of Experience</label>
+                            <input type="number" name="experience" placeholder="e.g. 5" min="0" max="50">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Hospital / Health Centre</label>
+                        <input type="text" name="hospital" placeholder="e.g. Govt. District Hospital, Thrissur" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>District</label>
+                            <select name="district" required>
+                                <option value="">Select District</option>
+                                <option>Thiruvananthapuram</option>
+                                <option>Kollam</option>
+                                <option>Pathanamthitta</option>
+                                <option>Alappuzha</option>
+                                <option>Kottayam</option>
+                                <option>Idukki</option>
+                                <option>Ernakulam</option>
+                                <option>Thrissur</option>
+                                <option>Palakkad</option>
+                                <option>Malappuram</option>
+                                <option>Kozhikode</option>
+                                <option>Wayanad</option>
+                                <option>Kannur</option>
+                                <option>Kasaragod</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Phone Number</label>
+                            <input type="text" name="phone" placeholder="10-digit mobile number" maxlength="10" required>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Official Email</label>
+                        <input type="email" name="email" placeholder="e.g. name@health.kerala.gov.in">
+                    </div>
+
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:14px;margin-top:20px">
+                        🔑 Login Credentials
+                    </div>
+
+                    <div class="field-group">
+                        <label>
+                            Choose a Username
+                            <span style="font-size:11px;color:var(--text-muted);font-weight:400"> (e.g. firstname.lastname — no spaces)</span>
+                        </label>
+                        <input type="text" name="username" placeholder="e.g. arjun.pillai" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Password <span style="font-size:11px;color:var(--text-muted);font-weight:400">(min. 6 characters)</span></label>
+                            <input type="password" name="password" placeholder="Set a strong password" required minlength="6">
+                        </div>
+                        <div class="field-group">
+                            <label>Confirm Password</label>
+                            <input type="password" name="confirm_password" placeholder="Re-enter password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">📝 Submit Registration</button>
+                        <a href="/login?role=doctor" class="btn-secondary">← Back to Login</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
