@@ -4,14 +4,14 @@ import os
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR  = os.path.dirname(BASE_DIR)                       # SE_Project_v2/
+PROJECT_DIR  = os.path.dirname(BASE_DIR)
 FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
 UPLOAD_DIR   = os.path.join(PROJECT_DIR, "uploads")
 
 app = Flask(
     __name__,
-    template_folder=os.path.join(FRONTEND_DIR, "templates"),   # frontend/templates/
-    static_folder=os.path.join(FRONTEND_DIR, "static"),        # frontend/static/
+    template_folder=os.path.join(FRONTEND_DIR, "templates"),
+    static_folder=os.path.join(FRONTEND_DIR, "static"),
 )
 app.secret_key = "health_secret_2025"
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
@@ -36,10 +36,6 @@ def home():
 
 # ══════════════════════════════════════════════════════════════════════════════
 # LOGIN
-# Worker login:
-#   - Admin registers a worker with name + phone + password field.
-#   - Worker logs in with their PHONE NUMBER as username and the password
-#     set by admin.  Their worker_id is looked up from the workers table.
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -54,16 +50,13 @@ def login():
         cur = con.cursor()
 
         if role == "worker":
-            # Workers authenticate directly against the workers table.
-            # username = phone number, password = worker_password column.
             cur.execute(
                 "SELECT id, name FROM workers WHERE phone=%s AND worker_password=%s",
                 (username, password)
             )
             worker = cur.fetchone()
-
             if worker:
-                session["user"]      = worker[1]          # display name
+                session["user"]      = worker[1]
                 session["role"]      = "worker"
                 session["worker_id"] = worker[0]
                 flash(f"Welcome, {worker[1]}!", "success")
@@ -71,31 +64,97 @@ def login():
             else:
                 flash("Invalid phone number or password.", "danger")
 
-        else:
-            # Admin / Doctor authenticate against the users table
+        elif role == "doctor":
+            cur.execute(
+                "SELECT id, name, status FROM doctors WHERE username=%s AND password=%s",
+                (username, password)
+            )
+            doc = cur.fetchone()
+            if doc:
+                if doc[2] == "pending":
+                    flash("Your account is pending admin approval. Please wait.", "warning")
+                else:
+                    session["user"]      = doc[1]
+                    session["role"]      = "doctor"
+                    session["doctor_id"] = doc[0]
+                    flash(f"Welcome, {doc[1]}!", "success")
+                    return redirect("/doctor_dashboard")
+            else:
+                flash("Invalid username or password.", "danger")
+
+        else:  # admin
             cur.execute(
                 "SELECT id, username FROM users WHERE username=%s AND password=%s AND role=%s",
                 (username, password, role)
             )
             user = cur.fetchone()
-
             if user:
                 session["user"] = user[1]
                 session["role"] = role
                 flash("Login successful! Welcome back.", "success")
-                if role == "admin":
-                    return redirect("/admin_dashboard")
-                else:
-                    return redirect("/doctor_dashboard")
+                return redirect("/admin_dashboard")
             else:
                 flash("Invalid credentials. Please try again.", "danger")
 
     return render_template("login.html", role=role)
 
 # ══════════════════════════════════════════════════════════════════════════════
+# DOCTOR SELF-REGISTRATION
+# ══════════════════════════════════════════════════════════════════════════════
+@app.route("/doctor_register", methods=["GET", "POST"])
+def doctor_register():
+    if request.method == "POST":
+        name           = request.form["name"].strip()
+        specialization = request.form["specialization"].strip()
+        qualification  = request.form["qualification"].strip()
+        hospital       = request.form["hospital"].strip()
+        district       = request.form["district"]
+        phone          = request.form["phone"].strip()
+        email          = request.form["email"].strip()
+        experience     = request.form["experience"]
+        username       = request.form["username"].strip()
+        password       = request.form["password"].strip()
+        confirm        = request.form["confirm_password"].strip()
+
+        if password != confirm:
+            flash("Passwords do not match.", "danger")
+            return redirect("/doctor_register")
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return redirect("/doctor_register")
+
+        con = get_db()
+        cur = con.cursor()
+
+        # Check duplicate username
+        cur.execute("SELECT id FROM doctors WHERE username=%s", (username,))
+        if cur.fetchone():
+            flash("Username already taken. Please choose another.", "danger")
+            return redirect("/doctor_register")
+
+        # Check duplicate phone
+        cur.execute("SELECT id FROM doctors WHERE phone=%s", (phone,))
+        if cur.fetchone():
+            flash("A doctor with this phone number already exists.", "danger")
+            return redirect("/doctor_register")
+
+        cur.execute(
+            """INSERT INTO doctors
+               (name, specialization, qualification, hospital, district,
+                phone, email, experience, username, password, status, source)
+               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending','self')""",
+            (name, specialization, qualification, hospital, district,
+             phone, email, experience, username, password)
+        )
+        con.commit()
+        flash("Registration submitted! Please wait for admin approval before logging in.", "success")
+        return redirect("/login?role=doctor")
+
+    return render_template("doctor_register.html")
+
+# ══════════════════════════════════════════════════════════════════════════════
 # LOGOUT
-# We render a dedicated page BEFORE clearing the session so the message
-# is visible immediately.  The page auto-redirects to home after 3 seconds.
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/logout")
 def logout():
@@ -127,6 +186,12 @@ def admin_dashboard():
     cur.execute("SELECT COUNT(DISTINCT region) FROM workers")
     regions = cur.fetchone()[0]
 
+    cur.execute("SELECT COUNT(*) FROM doctors WHERE status='approved'")
+    total_doctors = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM doctors WHERE status='pending'")
+    pending_doctors = cur.fetchone()[0]
+
     cur.execute("SELECT * FROM workers ORDER BY id DESC LIMIT 5")
     recent_workers = cur.fetchall()
 
@@ -136,8 +201,64 @@ def admin_dashboard():
         records=total_records,
         reports=total_reports,
         regions=regions,
+        total_doctors=total_doctors,
+        pending_doctors=pending_doctors,
         recent_workers=recent_workers
     )
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ALL DOCTORS  (admin view)
+# ══════════════════════════════════════════════════════════════════════════════
+@app.route("/all_doctors")
+def all_doctors():
+    guard = require_login("admin")
+    if guard: return guard
+
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM doctors WHERE status='approved' ORDER BY id")
+    doctors = cur.fetchall()
+
+    return render_template("all_doctors.html", doctors=doctors)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PENDING DOCTORS  (admin approves / rejects self-registered doctors)
+# ══════════════════════════════════════════════════════════════════════════════
+@app.route("/pending_doctors")
+def pending_doctors():
+    guard = require_login("admin")
+    if guard: return guard
+
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM doctors WHERE status='pending' ORDER BY id")
+    doctors = cur.fetchall()
+
+    return render_template("pending_doctors.html", doctors=doctors)
+
+@app.route("/approve_doctor/<int:id>")
+def approve_doctor(id):
+    guard = require_login("admin")
+    if guard: return guard
+
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("UPDATE doctors SET status='approved' WHERE id=%s", (id,))
+    con.commit()
+    flash("Doctor approved successfully! They can now log in.", "success")
+    return redirect("/pending_doctors")
+
+@app.route("/reject_doctor/<int:id>")
+def reject_doctor(id):
+    guard = require_login("admin")
+    if guard: return guard
+
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("DELETE FROM doctors WHERE id=%s AND status='pending'", (id,))
+    con.commit()
+    flash("Doctor registration rejected and removed.", "danger")
+    return redirect("/pending_doctors")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DOCTOR DASHBOARD
@@ -150,23 +271,36 @@ def doctor_dashboard():
     con = get_db()
     cur = con.cursor()
 
-    cur.execute("SELECT COUNT(*) FROM records")
-    total_records = cur.fetchone()[0]
+    doctor_id = session.get("doctor_id")
+
+    # Doctor's own profile
+    cur.execute("SELECT * FROM doctors WHERE id=%s", (doctor_id,))
+    doctor_info = cur.fetchone()
+
+    # Records added by this doctor
+    cur.execute(
+        "SELECT COUNT(*) FROM records WHERE doctor_name=%s",
+        (session.get("user"),)
+    )
+    my_records_count = cur.fetchone()[0]
 
     cur.execute("SELECT COUNT(*) FROM workers")
     total_workers = cur.fetchone()[0]
 
+    # Recent records by this doctor
     cur.execute("""
         SELECT r.*, w.name
         FROM records r
         LEFT JOIN workers w ON r.worker_id = w.id
+        WHERE r.doctor_name=%s
         ORDER BY r.visit_date DESC LIMIT 8
-    """)
+    """, (session.get("user"),))
     recent_records = cur.fetchall()
 
     return render_template(
         "doctor_dashboard.html",
-        total_records=total_records,
+        doctor_info=doctor_info,
+        my_records_count=my_records_count,
         total_workers=total_workers,
         recent_records=recent_records
     )
@@ -205,7 +339,7 @@ def worker_dashboard():
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MY RECORDS  (worker sees own records)
+# MY RECORDS  (worker)
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/my_records")
 def my_records():
@@ -227,7 +361,7 @@ def my_records():
     return render_template("my_records.html", records=records)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MY REPORTS  (worker downloads own reports)
+# MY REPORTS  (worker)
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/my_reports")
 def my_reports():
@@ -264,9 +398,7 @@ def all_workers():
     return render_template("all_workers.html", workers=workers)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ADD WORKER  (admin registers a migrant worker)
-# The worker's phone number becomes their login username.
-# Admin also sets a temporary password for the worker.
+# ADD WORKER  (admin)
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/add_worker", methods=["GET", "POST"])
 def add_worker():
@@ -274,12 +406,12 @@ def add_worker():
     if guard: return guard
 
     if request.method == "POST":
-        name          = request.form["name"].strip()
-        gender        = request.form["gender"]
-        age           = request.form["age"]
-        phone         = request.form["phone"].strip()
-        region        = request.form["region"]
-        origin_state  = request.form.get("origin_state", "")
+        name            = request.form["name"].strip()
+        gender          = request.form["gender"]
+        age             = request.form["age"]
+        phone           = request.form["phone"].strip()
+        region          = request.form["region"]
+        origin_state    = request.form.get("origin_state", "")
         worker_password = request.form["worker_password"].strip()
 
         if len(phone) != 10 or not phone.isdigit():
@@ -293,7 +425,6 @@ def add_worker():
         con = get_db()
         cur = con.cursor()
 
-        # Check duplicate phone
         cur.execute("SELECT id FROM workers WHERE phone=%s", (phone,))
         if cur.fetchone():
             flash("A worker with this phone number already exists.", "danger")
@@ -301,20 +432,18 @@ def add_worker():
 
         cur.execute(
             """INSERT INTO workers(name, gender, age, phone, region, origin_state, worker_password)
-               VALUES(%s, %s, %s, %s, %s, %s, %s)""",
+               VALUES(%s,%s,%s,%s,%s,%s,%s)""",
             (name, gender, age, phone, region, origin_state, worker_password)
         )
         con.commit()
-        flash(
-            f"Worker '{name}' registered! They can log in with phone: {phone} and the password you set.",
-            "success"
-        )
+        flash(f"Worker '{name}' registered! Login: phone {phone}, password as set.", "success")
         return redirect("/add_worker")
 
     return render_template("add_worker.html")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ADD MEDICAL RECORD  (doctor)
+# Doctor name auto-filled from session — no manual input needed
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/add_record", methods=["GET", "POST"])
 def add_record():
@@ -327,25 +456,26 @@ def add_record():
     workers = cur.fetchall()
 
     if request.method == "POST":
-        worker_id = request.form["worker_id"]
-        symptoms  = request.form["symptoms"]
-        diagnosis = request.form["diagnosis"]
-        medicines = request.form["medicines"]
-        doctor    = request.form["doctor"]
+        worker_id  = request.form["worker_id"]
+        symptoms   = request.form["symptoms"]
+        diagnosis  = request.form["diagnosis"]
+        medicines  = request.form["medicines"]
+        # Doctor name comes from session — not from form input
+        doctor_name = session.get("user")
 
         cur.execute(
             """INSERT INTO records(worker_id, symptoms, diagnosis, medicines, doctor_name, visit_date)
-               VALUES(%s, %s, %s, %s, %s, CURDATE())""",
-            (worker_id, symptoms, diagnosis, medicines, doctor)
+               VALUES(%s,%s,%s,%s,%s,CURDATE())""",
+            (worker_id, symptoms, diagnosis, medicines, doctor_name)
         )
         con.commit()
         flash("Medical record added successfully!", "success")
         return redirect("/add_record")
 
-    return render_template("add_record.html", workers=workers)
+    return render_template("add_record.html", workers=workers, doctor_name=session.get("user"))
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SEARCH  (admin + doctor only)
+# SEARCH  (admin + doctor)
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/search", methods=["GET", "POST"])
 def search():
@@ -374,7 +504,7 @@ def search():
     return render_template("search.html", data=data, keyword=keyword)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# VIEW RECORDS  (admin, doctor, or the worker themselves)
+# VIEW RECORDS
 # ══════════════════════════════════════════════════════════════════════════════
 @app.route("/records/<int:id>")
 def view_records(id):
@@ -439,7 +569,7 @@ def upload():
         file.save(filepath)
 
         cur.execute(
-            "INSERT INTO reports(worker_id, filename) VALUES(%s, %s)",
+            "INSERT INTO reports(worker_id, filename) VALUES(%s,%s)",
             (worker_id, file.filename)
         )
         con.commit()

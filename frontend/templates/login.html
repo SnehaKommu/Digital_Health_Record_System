@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
 <div class="login-page">
     <div class="login-box">
 
@@ -20,10 +19,9 @@
                 {% endif %}
             </h2>
             <p>
-                {% if role == 'worker' %}
-                    Use your registered phone number and password
-                {% else %}
-                    Enter your credentials to continue
+                {% if role == 'worker' %}Use your registered phone number and password
+                {% elif role == 'doctor' %}Use your username and password to continue
+                {% else %}Enter your admin credentials
                 {% endif %}
             </p>
         </div>
@@ -33,7 +31,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
             <div class="alert {{ category }}">
-                {% if category == 'success' %}✅{% else %}❌{% endif %} {{ message }}
+                {% if category == 'success' %}✅{% elif category == 'warning' %}⚠️{% else %}❌{% endif %} {{ message }}
             </div>
             {% endfor %}
             {% endwith %}
@@ -42,42 +40,39 @@
                 <input type="hidden" name="role" value="{{ role }}">
 
                 <div class="field-group">
-                    <label>
-                        {% if role == 'worker' %}Phone Number (Username){% else %}Username{% endif %}
-                    </label>
-                    <input
-                        type="text"
-                        name="username"
-                        placeholder="{% if role == 'worker' %}Enter your 10-digit phone number{% else %}Enter username{% endif %}"
-                        required
-                        autocomplete="username"
-                    >
+                    <label>{% if role == 'worker' %}Phone Number (Username){% else %}Username{% endif %}</label>
+                    <input type="text" name="username"
+                        placeholder="{% if role == 'worker' %}Enter your 10-digit phone number{% else %}Enter your username{% endif %}"
+                        required autocomplete="username">
                 </div>
 
                 <div class="field-group">
                     <label>Password</label>
-                    <input
-                        type="password"
-                        name="password"
+                    <input type="password" name="password"
                         placeholder="Enter your password"
-                        required
-                        autocomplete="current-password"
-                    >
+                        required autocomplete="current-password">
                 </div>
 
                 {% if role == 'worker' %}
-                <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:8px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:#059669">
-                    ℹ️ Your login credentials were set by the admin when you were registered.
-                    Contact your admin if you cannot log in.
+                <div class="alert success" style="margin-bottom:4px">
+                    ℹ️ Your credentials were set by the admin. Contact admin if you cannot log in.
                 </div>
                 {% endif %}
 
                 <button class="submit-btn" type="submit">Sign In →</button>
             </form>
 
+            {% if role == 'doctor' %}
+            <div style="text-align:center; margin-top:22px; padding-top:20px; border-top:1px solid var(--border)">
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px">New doctor? Not in the system yet?</p>
+                <a href="/doctor_register" style="display:inline-block; padding:11px 24px; background:var(--primary-light); color:var(--primary); border-radius:8px; font-size:14px; font-weight:600; border:1px solid rgba(26,86,219,0.2)">
+                    📝 Register as a New Doctor
+                </a>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>
-
 </body>
 </html>

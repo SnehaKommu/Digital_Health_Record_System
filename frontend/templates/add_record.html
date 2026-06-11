@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
 <div class="dashboard-container">
 
     <div class="sidebar">
@@ -42,13 +41,13 @@
 
         <div class="page-header">
             <h1>Add Medical Record</h1>
-            <p>Record diagnosis, treatment, and prescription details</p>
+            <p>Record diagnosis, treatment, and prescription details for a worker</p>
         </div>
 
         <div class="form-section">
             <div class="form-card">
                 <h2>Patient Visit Record</h2>
-                <p class="form-subtitle">Enter the worker's clinical information for this visit</p>
+                <p class="form-subtitle">Fill in the clinical details for this visit</p>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% for category, message in messages %}
@@ -72,22 +71,27 @@
 
                     <div class="field-group">
                         <label>Symptoms</label>
-                        <textarea name="symptoms" placeholder="Describe the patient's symptoms (e.g., fever, cough, fatigue...)" required></textarea>
+                        <textarea name="symptoms" placeholder="Describe the patient's symptoms (e.g. fever, cough, body pain...)" required></textarea>
                     </div>
 
                     <div class="field-group">
                         <label>Diagnosis</label>
-                        <textarea name="diagnosis" placeholder="Enter clinical diagnosis (e.g., Dengue Fever, Typhoid, Malaria...)" required></textarea>
+                        <textarea name="diagnosis" placeholder="Clinical diagnosis (e.g. Dengue Fever, Typhoid, Malaria...)" required></textarea>
                     </div>
 
                     <div class="field-group">
                         <label>Prescribed Medicines</label>
-                        <textarea name="medicines" placeholder="List medicines and dosage (e.g., Paracetamol 500mg - 3x daily)" required></textarea>
+                        <textarea name="medicines" placeholder="Medicines and dosage (e.g. Paracetamol 500mg – 3x daily for 5 days)" required></textarea>
                     </div>
 
+                    <!-- Doctor name is auto-filled from session — read only -->
                     <div class="field-group">
-                        <label>Attending Doctor</label>
-                        <input type="text" name="doctor" placeholder="Doctor's full name" required>
+                        <label>
+                            Attending Doctor
+                            <span style="font-size:11px; color:var(--success); font-weight:500; margin-left:6px">✅ Auto-filled from your profile</span>
+                        </label>
+                        <input type="text" value="{{ doctor_name }}" readonly
+                            style="background:#f8fafc; color:var(--text-muted); cursor:not-allowed">
                     </div>
 
                     <div class="form-actions">
@@ -101,6 +105,5 @@
 
     </div>
 </div>
-
 </body>
 </html>
