@@ -163,13 +163,131 @@
                             The worker will log in using their <strong style="color:var(--text)">phone number as their username</strong>
                             and the password you set below. Please share these credentials with the worker after registration.
                         </p>
-                        <div class="field-group" style="margin-bottom:0">
+
+                        <div class="field-group">
                             <label>Set Login Password for Worker</label>
-                            <input type="text" name="worker_password"
-                                placeholder="Set a password (min. 4 characters)"
-                                required minlength="4">
+                            <input type="password" name="worker_password" id="workerPwd"
+                                placeholder="Min. 8 chars, uppercase, lowercase, number, special char"
+                                required minlength="8"
+                                oninput="checkPasswordStrength(this.value)">
+
+                            <!-- Strength bar -->
+                            <div style="margin-top:10px">
+                                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:5px">
+                                    <span>Password Strength</span>
+                                    <span id="strengthLabel">—</span>
+                                </div>
+                                <div style="height:6px; background:#e2e8f0; border-radius:4px; overflow:hidden">
+                                    <div id="strengthBar" style="height:100%; width:0%; border-radius:4px; transition:all 0.3s ease"></div>
+                                </div>
+                            </div>
+
+                            <!-- Live requirement checklist -->
+                            <div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:6px" id="pwdChecks">
+                                <div id="chk-len"    class="pwd-check">✗ At least 8 characters</div>
+                                <div id="chk-upper"  class="pwd-check">✗ One uppercase letter (A-Z)</div>
+                                <div id="chk-lower"  class="pwd-check">✗ One lowercase letter (a-z)</div>
+                                <div id="chk-num"    class="pwd-check">✗ One number (0-9)</div>
+                                <div id="chk-special"class="pwd-check">✗ One special character (!@#$% etc.)</div>
+                            </div>
+                        </div>
+
+                        <div class="field-group" style="margin-bottom:0">
+                            <label>Confirm Password</label>
+                            <input type="password" name="confirm_worker_password" id="workerPwdConfirm"
+                                placeholder="Re-enter the password"
+                                required
+                                oninput="checkConfirm()">
+                            <div id="confirmMsg" style="font-size:12px; margin-top:6px; display:none"></div>
                         </div>
                     </div>
+
+                    <style>
+                        .pwd-check {
+                            font-size: 12px;
+                            color: #94a3b8;
+                            display: flex;
+                            align-items: center;
+                            gap: 5px;
+                            padding: 4px 8px;
+                            border-radius: 6px;
+                            background: rgba(255,255,255,0.6);
+                            transition: all 0.2s;
+                        }
+                        .pwd-check.pass {
+                            color: #059669;
+                            background: #d1fae5;
+                        }
+                    </style>
+
+                    <script>
+                        function checkPasswordStrength(pwd) {
+                            const checks = {
+                                len:     pwd.length >= 8,
+                                upper:   /[A-Z]/.test(pwd),
+                                lower:   /[a-z]/.test(pwd),
+                                num:     /[0-9]/.test(pwd),
+                                special: /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(pwd)
+                            };
+
+                            // Update individual checks
+                            const labels = {
+                                len:     'At least 8 characters',
+                                upper:   'One uppercase letter (A-Z)',
+                                lower:   'One lowercase letter (a-z)',
+                                num:     'One number (0-9)',
+                                special: 'One special character (!@#$% etc.)'
+                            };
+                            for (const [key, passed] of Object.entries(checks)) {
+                                const el = document.getElementById('chk-' + key);
+                                el.textContent = (passed ? '✓ ' : '✗ ') + labels[key];
+                                el.className   = 'pwd-check' + (passed ? ' pass' : '');
+                            }
+
+                            // Strength score
+                            const score  = Object.values(checks).filter(Boolean).length;
+                            const bar    = document.getElementById('strengthBar');
+                            const label  = document.getElementById('strengthLabel');
+                            const colors = ['#ef4444','#f97316','#eab308','#22c55e','#059669'];
+                            const words  = ['Very Weak','Weak','Fair','Strong','Very Strong'];
+                            bar.style.width      = (score * 20) + '%';
+                            bar.style.background = colors[score - 1] || '#e2e8f0';
+                            label.textContent    = pwd.length ? words[score - 1] : '—';
+                            label.style.color    = colors[score - 1] || '#64748b';
+
+                            checkConfirm();
+                        }
+
+                        function checkConfirm() {
+                            const pwd     = document.getElementById('workerPwd').value;
+                            const confirm = document.getElementById('workerPwdConfirm').value;
+                            const msg     = document.getElementById('confirmMsg');
+                            if (!confirm) { msg.style.display = 'none'; return; }
+                            msg.style.display = 'block';
+                            if (pwd === confirm) {
+                                msg.textContent   = '✓ Passwords match';
+                                msg.style.color   = '#059669';
+                            } else {
+                                msg.textContent   = '✗ Passwords do not match';
+                                msg.style.color   = '#dc2626';
+                            }
+                        }
+
+                        // Block form submit if passwords don't match
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.querySelector('form').addEventListener('submit', function(e) {
+                                const pwd     = document.getElementById('workerPwd').value;
+                                const confirm = document.getElementById('workerPwdConfirm').value;
+                                if (pwd !== confirm) {
+                                    e.preventDefault();
+                                    document.getElementById('confirmMsg').textContent   = '✗ Passwords do not match — please fix before submitting.';
+                                    document.getElementById('confirmMsg').style.color   = '#dc2626';
+                                    document.getElementById('confirmMsg').style.display = 'block';
+                                    document.getElementById('workerPwdConfirm').focus();
+                                }
+                            });
+                        });
+                    </script>
 
                     <div class="form-actions">
                         <button type="submit" class="btn-primary">➕ Register Worker</button>

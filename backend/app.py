@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, session, flash, send_from_directory
 from db_config import get_db
 import os
 import io
@@ -20,6 +20,103 @@ app = Flask(
 app.secret_key = "health_secret_2025"
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Path where the auto-generated doctors Excel dataset is saved
+DATASET_PATH = os.path.join(PROJECT_DIR, "database", "Doctors_Dataset_MigraHealth_Kerala.xlsx")
+
+# ── Excel dataset helper ────────────────────────────────────────────────────────
+def _regenerate_doctors_excel(cur):
+    """
+    Reads all approved doctors from the DB and writes the Excel dataset file.
+    Called automatically whenever a doctor is approved so the file is always
+    in sync with the database.
+    """
+    cur.execute("""
+        SELECT id, name, specialization, qualification, hospital,
+               district, phone, email, experience, username, status, source
+        FROM doctors
+        WHERE status = 'approved'
+        ORDER BY id
+    """)
+    doctors = cur.fetchall()
+
+    wb  = Workbook()
+    ws  = wb.active
+    ws.title = "Doctor Directory"
+
+    HDR_BG = "1A56DB"
+    HDR_FG = "FFFFFF"
+    ALT_BG = "EFF6FF"
+    thin   = Side(style="thin", color="D0D7E2")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    # Title
+    ws.merge_cells("A1:K1")
+    t = ws["A1"]
+    t.value     = "MigraHealth Kerala — Doctor Directory"
+    t.font      = Font(name="Arial", bold=True, size=14, color=HDR_FG)
+    t.fill      = PatternFill("solid", fgColor="0F172A")
+    t.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 34
+
+    # Sub-title
+    ws.merge_cells("A2:K2")
+    s = ws["A2"]
+    s.value     = (f"Government of Kerala — Health Service Department | "
+                   f"{len(doctors)} Approved Doctors | Auto-updated on every approval")
+    s.font      = Font(name="Arial", size=10, color="64748B", italic=True)
+    s.fill      = PatternFill("solid", fgColor="F1F5F9")
+    s.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 18
+
+    # Header
+    headers = [
+        "Doctor ID", "Full Name", "Specialization", "Qualification",
+        "Hospital / Health Centre", "District", "Phone", "Email",
+        "Experience (Yrs)", "Username", "Source"
+    ]
+    ws.row_dimensions[3].height = 26
+    for col, h in enumerate(headers, 1):
+        c = ws.cell(row=3, column=col, value=h)
+        c.font      = Font(name="Arial", bold=True, size=11, color=HDR_FG)
+        c.fill      = PatternFill("solid", fgColor=HDR_BG)
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        c.border    = border
+
+    # Data rows
+    # col index: id(0) name(1) spec(2) qual(3) hosp(4) dist(5)
+    #            phone(6) email(7) exp(8) username(9) status(10) source(11)
+    for i, d in enumerate(doctors):
+        row          = i + 4
+        source_label = "Pre-loaded" if d[11] == "dataset" else "Self-Registered"
+        row_data     = [
+            f"D{d[0]:03d}", d[1], d[2], d[3], d[4],
+            d[5], d[6], d[7], d[8], d[9], source_label
+        ]
+        bg = ALT_BG if i % 2 == 0 else "FFFFFF"
+        ws.row_dimensions[row].height = 20
+
+        for col, val in enumerate(row_data, 1):
+            c = ws.cell(row=row, column=col, value=val)
+            c.font      = Font(name="Arial", size=10,
+                               bold=(col == 1),
+                               color=("7C3AED" if col == 1 else "0F172A"))
+            c.fill      = PatternFill("solid", fgColor=bg)
+            c.alignment = Alignment(
+                horizontal="center" if col in (1, 7, 9) else "left",
+                vertical="center",
+                wrap_text=(col in (4, 5))
+            )
+            c.border = border
+
+    col_widths = [10, 26, 22, 18, 42, 20, 14, 38, 16, 22, 14]
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = w
+
+    ws.freeze_panes = "A4"
+    ws.auto_filter.ref = f"A3:K{len(doctors) + 3}"
+
+    wb.save(DATASET_PATH)
 
 # ── Auth guard ─────────────────────────────────────────────────────────────────
 def require_login(role=None):
@@ -249,7 +346,11 @@ def approve_doctor(id):
     cur = con.cursor()
     cur.execute("UPDATE doctors SET status='approved' WHERE id=%s", (id,))
     con.commit()
-    flash("Doctor approved successfully! They can now log in.", "success")
+
+    # ── Auto-regenerate the Excel dataset file so it always stays in sync ──
+    _regenerate_doctors_excel(cur)
+
+    flash("Doctor approved! They can now log in. Dataset Excel has been updated automatically.", "success")
     return redirect("/pending_doctors")
 
 @app.route("/reject_doctor/<int:id>")
@@ -416,14 +517,32 @@ def add_worker():
         phone           = request.form["phone"].strip()
         region          = request.form["region"]
         origin_state    = request.form.get("origin_state", "")
-        worker_password = request.form["worker_password"].strip()
+        worker_password         = request.form["worker_password"].strip()
+        confirm_worker_password = request.form["confirm_worker_password"].strip()
 
         if len(phone) != 10 or not phone.isdigit():
             flash("Phone number must be exactly 10 digits.", "danger")
             return redirect("/add_worker")
 
-        if len(worker_password) < 4:
-            flash("Password must be at least 4 characters.", "danger")
+        if worker_password != confirm_worker_password:
+            flash("Passwords do not match. Please re-enter.", "danger")
+            return redirect("/add_worker")
+
+        # ── Password validations ──────────────────────────────────────────────
+        import re
+        pwd_errors = []
+        if len(worker_password) < 8:
+            pwd_errors.append("at least 8 characters")
+        if not re.search(r"[A-Z]", worker_password):
+            pwd_errors.append("one uppercase letter (A-Z)")
+        if not re.search(r"[a-z]", worker_password):
+            pwd_errors.append("one lowercase letter (a-z)")
+        if not re.search(r"[0-9]", worker_password):
+            pwd_errors.append("one number (0-9)")
+        if not re.search(r"[!@#$%^&*()_\-+=\[\]{};':\"\\|,.<>/?]", worker_password):
+            pwd_errors.append("one special character (!@#$%^&* etc.)")
+        if pwd_errors:
+            flash("Password must contain: " + ", ".join(pwd_errors) + ".", "danger")
             return redirect("/add_worker")
 
         con = get_db()
@@ -673,119 +792,15 @@ def analytics():
         recent_records=recent_records
     )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DOWNLOAD DOCTORS EXCEL  (admin)
-# Generates a fresh Excel from the live doctors table — always up to date.
-# Newly approved self-registered doctors are included automatically.
-# ══════════════════════════════════════════════════════════════════════════════
-@app.route("/download_doctors_excel")
-def download_doctors_excel():
-    guard = require_login("admin")
-    if guard: return guard
-
-    con = get_db()
-    cur = con.cursor()
-
-    # Fetch ALL approved doctors ordered by id
-    cur.execute("""
-        SELECT id, name, specialization, qualification, hospital,
-               district, phone, email, experience, username, status, source
-        FROM doctors
-        WHERE status = 'approved'
-        ORDER BY id
-    """)
-    doctors = cur.fetchall()
-
-    # ── Build workbook ────────────────────────────────────────────────────────
-    wb  = Workbook()
-    ws  = wb.active
-    ws.title = "Doctor Directory"
-
-    HDR_BG = "1A56DB"
-    HDR_FG = "FFFFFF"
-    ALT_BG = "EFF6FF"
-
-    thin   = Side(style="thin", color="D0D7E2")
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
-
-    # Title row
-    ws.merge_cells("A1:K1")
-    t = ws["A1"]
-    t.value     = "MigraHealth Kerala — Doctor Directory"
-    t.font      = Font(name="Arial", bold=True, size=14, color=HDR_FG)
-    t.fill      = PatternFill("solid", fgColor="0F172A")
-    t.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 34
-
-    # Sub-title
-    ws.merge_cells("A2:K2")
-    s = ws["A2"]
-    s.value     = f"Government of Kerala — Health Service Department | {len(doctors)} Approved Doctors | Generated on demand"
-    s.font      = Font(name="Arial", size=10, color="64748B", italic=True)
-    s.fill      = PatternFill("solid", fgColor="F1F5F9")
-    s.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 18
-
-    # Header row
-    headers = [
-        "Doctor ID", "Full Name", "Specialization", "Qualification",
-        "Hospital / Health Centre", "District", "Phone", "Email",
-        "Experience (Yrs)", "Username", "Source"
-    ]
-    ws.row_dimensions[3].height = 26
-    for col, h in enumerate(headers, 1):
-        c = ws.cell(row=3, column=col, value=h)
-        c.font      = Font(name="Arial", bold=True, size=11, color=HDR_FG)
-        c.fill      = PatternFill("solid", fgColor=HDR_BG)
-        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        c.border    = border
-
-    # Data rows
-    # doctors row: id(0) name(1) spec(2) qual(3) hosp(4) dist(5)
-    #              phone(6) email(7) exp(8) username(9) status(10) source(11)
-    for i, d in enumerate(doctors):
-        row = i + 4
-        source_label = "Pre-loaded" if d[11] == "dataset" else "Self-Registered"
-        row_data = [
-            f"D{d[0]:03d}", d[1], d[2], d[3], d[4],
-            d[5], d[6], d[7], d[8], d[9], source_label
-        ]
-        bg = ALT_BG if i % 2 == 0 else "FFFFFF"
-        ws.row_dimensions[row].height = 20
-
-        for col, val in enumerate(row_data, 1):
-            c = ws.cell(row=row, column=col, value=val)
-            c.font      = Font(name="Arial", size=10,
-                               bold=(col == 1),
-                               color=("7C3AED" if col == 1 else "0F172A"))
-            c.fill      = PatternFill("solid", fgColor=bg)
-            c.alignment = Alignment(
-                horizontal="center" if col in (1, 7, 9) else "left",
-                vertical="center",
-                wrap_text=(col in (4, 5))
-            )
-            c.border = border
-
-    # Column widths
-    col_widths = [10, 26, 22, 18, 42, 20, 14, 38, 16, 22, 14]
-    for col, w in enumerate(col_widths, 1):
-        ws.column_dimensions[get_column_letter(col)].width = w
-
-    ws.freeze_panes = "A4"
-    ws.auto_filter.ref = f"A3:K{len(doctors) + 3}"
-
-    # ── Stream to browser ─────────────────────────────────────────────────────
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    return send_file(
-        output,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        as_attachment=True,
-        download_name="Doctors_Dataset_MigraHealth_Kerala.xlsx"
-    )
-
-
 if __name__ == "__main__":
+    # Auto-generate the doctors Excel dataset on every startup so it is
+    # always in sync with the database from the very first run.
+    try:
+        _con = get_db()
+        _cur = _con.cursor()
+        _regenerate_doctors_excel(_cur)
+        _con.close()
+        print("[MigraHealth] Doctors dataset Excel regenerated at startup.")
+    except Exception as _e:
+        print(f"[MigraHealth] Could not regenerate Excel on startup: {_e}")
     app.run(debug=True)
