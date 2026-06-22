@@ -116,6 +116,8 @@ def _regenerate_doctors_excel(cur):
     ws.freeze_panes = "A4"
     ws.auto_filter.ref = f"A3:K{len(doctors) + 3}"
 
+    # Ensure the target folder exists before saving
+    os.makedirs(os.path.dirname(DATASET_PATH), exist_ok=True)
     wb.save(DATASET_PATH)
 
 # ── Auth guard ─────────────────────────────────────────────────────────────────
