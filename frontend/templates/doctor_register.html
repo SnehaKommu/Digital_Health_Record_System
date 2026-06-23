@@ -130,15 +130,29 @@
                         <input type="text" name="username" placeholder="e.g. arjun.pillai" required>
                     </div>
 
-                    <div class="form-row">
-                        <div class="field-group">
-                            <label>Password <span style="font-size:11px;color:var(--text-muted);font-weight:400">(min. 6 characters)</span></label>
-                            <input type="password" name="password" placeholder="Set a strong password" required minlength="6">
+                    <div class="field-group">
+                        <label>Password</label>
+                        <input type="password" id="reg_password" name="password"
+                            placeholder="Create a strong password" required
+                            oninput="regStrength(this.value)">
+                        <div style="height:6px;border-radius:4px;background:#e2e8f0;margin-top:8px;overflow:hidden">
+                            <div id="reg_fill" style="height:100%;width:0%;border-radius:4px;transition:width 0.3s,background 0.3s"></div>
                         </div>
-                        <div class="field-group">
-                            <label>Confirm Password</label>
-                            <input type="password" name="confirm_password" placeholder="Re-enter password" required>
-                        </div>
+                        <div id="reg_label" style="font-size:12px;margin-top:4px;font-weight:600;color:#94a3b8">Enter a password</div>
+                        <ul style="list-style:none;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:3px" id="reg_checks">
+                            <li id="rc_len"     style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px"><span class="mk">✗</span> Min. 8 characters</li>
+                            <li id="rc_upper"   style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px"><span class="mk">✗</span> Uppercase (A-Z)</li>
+                            <li id="rc_lower"   style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px"><span class="mk">✗</span> Lowercase (a-z)</li>
+                            <li id="rc_num"     style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px"><span class="mk">✗</span> Number (0-9)</li>
+                            <li id="rc_special" style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px"><span class="mk">✗</span> Special char (!@#$...)</li>
+                        </ul>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="reg_confirm" name="confirm_password"
+                            placeholder="Re-enter your password" required oninput="regMatch()">
+                        <div id="reg_match" style="font-size:12px;margin-top:6px;font-weight:600"></div>
                     </div>
 
                     <div class="form-actions">
@@ -152,5 +166,45 @@
 
     </div>
 </div>
+
+<script>
+function regStrength(pwd) {
+    const checks = {
+        rc_len:     pwd.length >= 8,
+        rc_upper:   /[A-Z]/.test(pwd),
+        rc_lower:   /[a-z]/.test(pwd),
+        rc_num:     /[0-9]/.test(pwd),
+        rc_special: /[!@#$%^&*()\-_+=\[\]{};':"\\|,.<>\/?]/.test(pwd)
+    };
+    let score = 0;
+    Object.entries(checks).forEach(([id, ok]) => {
+        const el = document.getElementById(id);
+        el.querySelector('.mk').textContent = ok ? '✓' : '✗';
+        el.style.color = ok ? '#059669' : '#94a3b8';
+        if (ok) score++;
+    });
+    const levels = [
+        {p:'20%',c:'#ef4444',t:'Very Weak'},
+        {p:'40%',c:'#f97316',t:'Weak'},
+        {p:'60%',c:'#eab308',t:'Fair'},
+        {p:'80%',c:'#22c55e',t:'Strong'},
+        {p:'100%',c:'#059669',t:'Very Strong'}
+    ];
+    const lv = score > 0 ? levels[score-1] : {p:'0%',c:'#e2e8f0',t:'Enter a password'};
+    const fill = document.getElementById('reg_fill');
+    fill.style.width = lv.p; fill.style.background = lv.c;
+    const lbl = document.getElementById('reg_label');
+    lbl.textContent = lv.t; lbl.style.color = lv.c;
+    regMatch();
+}
+function regMatch() {
+    const p1 = document.getElementById('reg_password').value;
+    const p2 = document.getElementById('reg_confirm').value;
+    const h  = document.getElementById('reg_match');
+    if (!p2) { h.textContent=''; return; }
+    h.textContent = p1===p2 ? '✓ Passwords match' : '✗ Passwords do not match';
+    h.style.color = p1===p2 ? '#059669' : '#dc2626';
+}
+</script>
 </body>
 </html>

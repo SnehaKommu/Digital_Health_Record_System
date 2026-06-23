@@ -33,7 +33,7 @@ def _regenerate_doctors_excel(cur):
     """
     cur.execute("""
         SELECT id, name, specialization, qualification, hospital,
-               district, phone, email, experience, username, status, source
+               district, phone, email, experience, username, status, source, password_changed
         FROM doctors
         WHERE status = 'approved'
         ORDER BY id
@@ -144,13 +144,16 @@ def home():
 def login():
     role = request.args.get("role", "worker")
 
+    # Always fetch approved doctors for the dropdown on the doctor login page
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT id, name, username FROM doctors WHERE status='approved' ORDER BY name")
+    doctor_list = cur.fetchall()  # [(id, name, username), ...]
+
     if request.method == "POST":
         username = request.form["username"].strip()
         password = request.form["password"].strip()
         role     = request.form["role"]
-
-        con = get_db()
-        cur = con.cursor()
 
         if role == "worker":
             cur.execute(
@@ -169,13 +172,19 @@ def login():
 
         elif role == "doctor":
             cur.execute(
-                "SELECT id, name, status FROM doctors WHERE username=%s AND password=%s",
+                "SELECT id, name, status, password_changed FROM doctors WHERE username=%s AND password=%s",
                 (username, password)
             )
             doc = cur.fetchone()
             if doc:
                 if doc[2] == "pending":
                     flash("Your account is pending admin approval. Please wait.", "warning")
+                elif doc[3] == 0:
+                    # First login — force password change before entering the system
+                    session["temp_doctor_id"]       = doc[0]
+                    session["temp_doctor_name"]     = doc[1]
+                    session["temp_doctor_username"] = username
+                    return redirect("/doctor_set_password")
                 else:
                     session["user"]      = doc[1]
                     session["role"]      = "doctor"
@@ -199,7 +208,7 @@ def login():
             else:
                 flash("Invalid credentials. Please try again.", "danger")
 
-    return render_template("login.html", role=role)
+    return render_template("login.html", role=role, doctor_list=doctor_list)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DOCTOR SELF-REGISTRATION
@@ -223,8 +232,20 @@ def doctor_register():
             flash("Passwords do not match.", "danger")
             return redirect("/doctor_register")
 
-        if len(password) < 6:
-            flash("Password must be at least 6 characters.", "danger")
+        import re
+        pwd_errors = []
+        if len(password) < 8:
+            pwd_errors.append("at least 8 characters")
+        if not re.search(r"[A-Z]", password):
+            pwd_errors.append("one uppercase letter (A-Z)")
+        if not re.search(r"[a-z]", password):
+            pwd_errors.append("one lowercase letter (a-z)")
+        if not re.search(r"[0-9]", password):
+            pwd_errors.append("one number (0-9)")
+        if not re.search(r"[!@#$%^&*()_\-+=\[\]{};':\"\\|,.<>/?]", password):
+            pwd_errors.append("one special character (!@#$%^&* etc.)")
+        if pwd_errors:
+            flash("Password must contain: " + ", ".join(pwd_errors) + ".", "danger")
             return redirect("/doctor_register")
 
         con = get_db()
@@ -245,8 +266,8 @@ def doctor_register():
         cur.execute(
             """INSERT INTO doctors
                (name, specialization, qualification, hospital, district,
-                phone, email, experience, username, password, status, source)
-               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending','self')""",
+                phone, email, experience, username, password, status, source, password_changed)
+               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending','self',1)""",
             (name, specialization, qualification, hospital, district,
              phone, email, experience, username, password)
         )
@@ -255,6 +276,63 @@ def doctor_register():
         return redirect("/login?role=doctor")
 
     return render_template("doctor_register.html")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DOCTOR FIRST-LOGIN PASSWORD SET
+# Pre-loaded doctors have password_changed=0. On their very first login they
+# are redirected here to set their own password before entering the system.
+# ══════════════════════════════════════════════════════════════════════════════
+@app.route("/doctor_set_password", methods=["GET", "POST"])
+def doctor_set_password():
+    # Must have come through the first-login check
+    if "temp_doctor_id" not in session:
+        return redirect("/login?role=doctor")
+
+    import re
+    if request.method == "POST":
+        new_password = request.form["new_password"].strip()
+        confirm      = request.form["confirm_password"].strip()
+
+        if new_password != confirm:
+            flash("Passwords do not match.", "danger")
+            return redirect("/doctor_set_password")
+
+        # Strong password validation — same rules as worker
+        pwd_errors = []
+        if len(new_password) < 8:
+            pwd_errors.append("at least 8 characters")
+        if not re.search(r"[A-Z]", new_password):
+            pwd_errors.append("one uppercase letter (A-Z)")
+        if not re.search(r"[a-z]", new_password):
+            pwd_errors.append("one lowercase letter (a-z)")
+        if not re.search(r"[0-9]", new_password):
+            pwd_errors.append("one number (0-9)")
+        if not re.search(r"[!@#$%^&*()_\-+=\[\]{};':\"\\|,.<>/?]", new_password):
+            pwd_errors.append("one special character (!@#$%^&* etc.)")
+        if pwd_errors:
+            flash("Password must contain: " + ", ".join(pwd_errors) + ".", "danger")
+            return redirect("/doctor_set_password")
+
+        doc_id = session["temp_doctor_id"]
+        con = get_db()
+        cur = con.cursor()
+        cur.execute(
+            "UPDATE doctors SET password=%s, password_changed=1 WHERE id=%s",
+            (new_password, doc_id)
+        )
+        con.commit()
+
+        # Now log the doctor in properly
+        session["user"]      = session.pop("temp_doctor_name")
+        session["role"]      = "doctor"
+        session["doctor_id"] = session.pop("temp_doctor_id")
+        session.pop("temp_doctor_username", None)
+
+        flash("Password set successfully! Welcome to MigraHealth.", "success")
+        return redirect("/doctor_dashboard")
+
+    doctor_name = session.get("temp_doctor_name", "Doctor")
+    return render_template("doctor_set_password.html", doctor_name=doctor_name)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # LOGOUT
@@ -366,6 +444,55 @@ def reject_doctor(id):
     con.commit()
     flash("Doctor registration rejected and removed.", "danger")
     return redirect("/pending_doctors")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DOCTOR DATASET PAGE  (admin views all doctors + downloads Excel)
+# The Excel is auto-generated from the live DB every time this page loads,
+# so it always includes both the 50 pre-loaded doctors AND any newly approved
+# self-registered doctors.
+# ══════════════════════════════════════════════════════════════════════════════
+@app.route("/doctor_dataset")
+def doctor_dataset():
+    guard = require_login("admin")
+    if guard: return guard
+
+    con = get_db()
+    cur = con.cursor()
+
+    # Fetch all approved doctors to display in the HTML table
+    # Excel is NOT regenerated here — it is only updated when a new
+    # doctor is approved (in approve_doctor route below).
+    cur.execute("""
+        SELECT id, name, specialization, qualification, hospital,
+               district, phone, email, experience, username, source
+        FROM doctors
+        WHERE status = 'approved'
+        ORDER BY id
+    """)
+    doctors = cur.fetchall()
+
+    return render_template("doctor_dataset.html", doctors=doctors,
+                           total=len(doctors))
+
+
+@app.route("/download_doctor_dataset")
+def download_doctor_dataset():
+    guard = require_login("admin")
+    if guard: return guard
+
+    # Serve the existing Excel file — it is kept up to date automatically
+    # whenever a doctor is approved (approve_doctor route regenerates it).
+    if not os.path.exists(DATASET_PATH):
+        flash("Dataset file not found. Please wait for the next doctor approval to regenerate it, or restart the server.", "danger")
+        return redirect("/doctor_dataset")
+
+    from flask import send_file
+    return send_file(
+        DATASET_PATH,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name="Doctors_Dataset_MigraHealth_Kerala.xlsx"
+    )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DOCTOR DASHBOARD
